@@ -3,6 +3,8 @@ package util
 import (
 	"math"
 	"math/rand"
+	"net"
+	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
@@ -163,4 +165,29 @@ func IsZeroLimitAndOffset(limit, page int64) (int64, int64) {
 	}
 
 	return limit, page
+}
+
+func GetRemoteIP(req *http.Request) string {
+	ip := req.Header.Get("XRealIP")
+	if ip == "" {
+		ip = req.Header.Get("XForwardedFor")
+	}
+
+	if ip == "" {
+		if addr, _, err := net.SplitHostPort(req.RemoteAddr); err == nil {
+			ip = addr
+		} else {
+			ip = req.RemoteAddr
+		}
+	}
+
+	if idx := strings.IndexByte(ip, ','); idx >= 0 {
+		ip = ip[:idx]
+	}
+
+	if ip == "::1" {
+		ip = "127.0.0.1"
+	}
+
+	return ip
 }
